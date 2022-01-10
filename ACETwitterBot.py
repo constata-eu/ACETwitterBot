@@ -26,11 +26,11 @@ def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, id
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateQuote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, quoteUserRepla, quoteTextRepla, quoteImageRepla):
+def htmlGenerateQuote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, quoteNameRepla, quoteUserRepla, quoteTextRepla, quoteImageRepla):
     template = open('templateQuote.html','r')
     tweetHtml = template.read()
     template.close()
-    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameQuote', quoteUserRepla).replace('twTextQuote', quoteTextRepla).replace('twImageQuote', quoteImageRepla)
+    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameQuote', quoteUserRepla).replace('twTextQuote', quoteTextRepla).replace('twImageQuote', quoteImageRepla).replace('twUserQuote', quoteUserRepla)
     outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
@@ -51,13 +51,16 @@ while True:
         lastTweetID = lastTweetFile.read()
         lastTweetFile = open('lastTweetNumber','r')
         lastTweetStamp = lastTweetFile.read()
-        hashtags = tweepy.Cursor(api.search_tweets, q="#SelloACE", since_id=lastTweetID)
+        hashtags = tweepy.Cursor(api.search_tweets, q="@constataEu", since_id=lastTweetID)
 
 
         for tweets in reversed(list(hashtags.items())):
+            if tweets.text.startswith('RT'):
+                 continue
             os.mkdir('{}'.format(tweets.id))
             print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
-            #api.update_status('Estamos trabajando para sellar el tweet ID {}'.format(tweets.id), in_reply_to_status_id=tweets.id)
+            print('@{} estoy trabajando para sellar el tweet. En breve, responderé aquí 👇 con el certificado.'.format(tweets.user.screen_name), tweets.id)
+            api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
             with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
                 json.dump(tweets._json, file, indent=2)
             if tweets.in_reply_to_status_id:
@@ -66,8 +69,8 @@ while True:
                 htmlGenerateReply(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.text,replyID.user.profile_image_url_https)
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
-                htmlGenerateQuote(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.text,tweets.quoted_status.user.profile_image_url_https)
-            else:
+                htmlGenerateQuote(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.text,tweets.quoted_status.user.profile_image_url_https)
+            else:    
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
                 htmlGenerate(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id)
             zipPath = '{}.zip'.format(tweets.id)
@@ -83,7 +86,7 @@ while True:
             state = stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']
             document_id = stampOutJson['parts'][0]['document_id']
 
-            db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state})
+            db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
             lastTweetStamp = tweets.id
 
             os.remove('{}'.format(zipPath))
@@ -96,13 +99,14 @@ while True:
         lastTweetFile.close()
 
         print("Último tweet: ",lastTweetID)
-        print('Esperando 47 segundos')
-        time.sleep(7)#Serán 60'
+        print('Esperando 60 segundos')
+        time.sleep(60)#Serán 60'
 
         searchDraft = db.search(stampDocuments.state == 'Draft')
         for item in searchDraft:
             docId = item['document_id']
             tweetId = item['tw_id']
+            user2Reply = item['userToReply']
 
             print("En draft (esperando publicación en Blockchain)",docId)
 
@@ -115,17 +119,17 @@ while True:
             if itemState == 'Published':
                 print("Ya está publicado :) ", docId)
                 outputHtml = open("{}.html".format(tweetId), "w")
-                outputFetchProof = subprocess.Popen(["./constata-cli-linux", "--password", "daredevil", "fetch-proof", "{}".format(docId)], stdout=outputHtml, universal_newlines=True)
+                outputFetchProof = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "fetch-proof", "{}".format(docId)], stdout=outputHtml, universal_newlines=True)
                 outputFetchProof.wait()
                 db.update({'state': 'FetchProofed'}, stampDocuments.document_id == '{}'.format(docId))
                 print("html almacenado y cambiado state del documento a FetchProofed")
-                uploadHtml = subprocess.Popen(["s3cmd", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata"], stdout=subprocess.PIPE, universal_newlines=True)
+                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata"], stdout=subprocess.PIPE, universal_newlines=True)
                 uploadHtml.wait()
                 print("html enviado a Digital Ocean Spaces")
                 os.remove('{}.html'.format(tweetId))
                 print("html eliminado de storage local")
-                #api.update_status('¡Tu tweet fue sellado! Descárgalo-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html'.format(tweetId), in_reply_to_status_id=tweetId)
-                print("¡Tu tweet fue sellado! Descárgalo-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html".format(tweetId))
+                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html'.format(user2Reply, tweetId), in_reply_to_status_id=tweetId)
+                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html".format(tweetId))
 
     except IndexError:
         print('No hay un último tweet en el rango definido')

@@ -1,0 +1,14 @@
+#Ignora el archivo de credenciales
+access.py
+
+#Ignora el archivo de config constata-cli
+constata_conf.json
+
+#Ignora sesiones
+botSesion
+
+#Ignora python cache
+__pycache__
+
+#Ignora la base de datos
+db.json
