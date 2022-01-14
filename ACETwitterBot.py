@@ -59,8 +59,8 @@ while True:
                  continue
             os.mkdir('{}'.format(tweets.id))
             print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
-            print('@{} estoy trabajando para sellar el tweet. En breve, responderé aquí 👇 con el certificado.'.format(tweets.user.screen_name), tweets.id)
-            api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
+            print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
+            #api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
             with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
                 json.dump(tweets._json, file, indent=2)
             if tweets.in_reply_to_status_id:
@@ -70,7 +70,7 @@ while True:
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
                 htmlGenerateQuote(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.text,tweets.quoted_status.user.profile_image_url_https)
-            else:    
+            else:
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
                 htmlGenerate(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id)
             zipPath = '{}.zip'.format(tweets.id)
