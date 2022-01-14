@@ -56,7 +56,9 @@ while True:
 
         for tweets in reversed(list(hashtags.items())):
             if tweets.text.startswith('RT'):
-                 continue
+                continue
+            if tweets.in_reply_to_status_id and ("constataEu" == tweets.user.screen_name):
+                continue
             os.mkdir('{}'.format(tweets.id))
             print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
             print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
