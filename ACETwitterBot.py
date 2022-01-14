@@ -57,7 +57,7 @@ while True:
         for tweets in reversed(list(hashtags.items())):
             if tweets.text.startswith('RT'):
                 continue
-            if tweets.in_reply_to_status_id and ("constataEu" == tweets.user.screen_name):
+            if tweets.text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
             os.mkdir('{}'.format(tweets.id))
             print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
