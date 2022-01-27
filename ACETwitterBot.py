@@ -130,7 +130,7 @@ while True:
                 print("html enviado a Digital Ocean Spaces")
                 os.remove('{}.html'.format(tweetId))
                 print("html eliminado de storage local")
-                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html'.format(user2Reply, tweetId), in_reply_to_status_id=tweetId)
+                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, SPACES_FOLDER, tweetId), in_reply_to_status_id=tweetId)
                 print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html".format(tweetId))
 
     except IndexError:
