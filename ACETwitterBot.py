@@ -125,7 +125,7 @@ while True:
                 outputFetchProof.wait()
                 db.update({'state': 'FetchProofed'}, stampDocuments.document_id == '{}'.format(docId))
                 print("html almacenado y cambiado state del documento a FetchProofed")
-                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}".format(tweetId), "s3://aceconstata/{}/{}.html".format(SPACES_FOLDER, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
+                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata/{}/{}.html".format(SPACES_FOLDER, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
                 uploadHtml.wait()
                 print("html enviado a Digital Ocean Spaces")
                 os.remove('{}.html'.format(tweetId))
