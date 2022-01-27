@@ -125,13 +125,13 @@ while True:
                 outputFetchProof.wait()
                 db.update({'state': 'FetchProofed'}, stampDocuments.document_id == '{}'.format(docId))
                 print("html almacenado y cambiado state del documento a FetchProofed")
-                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata"], stdout=subprocess.PIPE, universal_newlines=True)
+                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}".format(tweetId), "s3://aceconstata/{}/{}.html".format(SPACES_FOLDER, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
                 uploadHtml.wait()
                 print("html enviado a Digital Ocean Spaces")
                 os.remove('{}.html'.format(tweetId))
                 print("html eliminado de storage local")
                 api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, SPACES_FOLDER, tweetId), in_reply_to_status_id=tweetId)
-                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}.html".format(tweetId))
+                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(SPACES_FOLDER, tweetId))
 
     except IndexError:
         print('No hay un último tweet en el rango definido')
