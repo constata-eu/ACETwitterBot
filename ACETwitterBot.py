@@ -51,7 +51,7 @@ while True:
         lastTweetID = lastTweetFile.read()
         lastTweetFile = open('lastTweetNumber','r')
         lastTweetStamp = lastTweetFile.read()
-        hashtags = tweepy.Cursor(api.search_tweets, q="@constataEu", since_id=lastTweetID)
+        hashtags = tweepy.Cursor(api.search_tweets, q=TEXT_TO_SEARCH, since_id=lastTweetID)
 
 
         for tweets in reversed(list(hashtags.items())):
