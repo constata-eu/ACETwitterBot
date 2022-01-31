@@ -4,8 +4,27 @@ import os
 import shutil
 import time
 import subprocess
+import requests
 from tinydb import TinyDB, Query
 from access import *
+
+def send_tl_message(mge_error):
+    bot_token = TL_TOKEN
+    URL = "https://api.telegram.org/bot" + bot_token + "/sendMessage"
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    chat_id = CHAT_ID
+    text = "ACE Twitter bot ALERT!\n" + mge_error
+    data = '{"chat_id": "' + chat_id + '", "text": "' + text + '", "disable_notification": false"'+ '"}'
+
+    try:
+        requests.post(URL, headers=headers, data=data)
+        return 'Mensaje enviado a Telegram'
+
+    except Exception as e:
+        print( 'La Exception >> ' + type(e).__name__ )
+        return 'Error interno al enviar el mensaje a Telegram'
 
 
 def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla):
@@ -81,7 +100,7 @@ while True:
 
             outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
             outputStamp.wait()
-            print("----------------------------------------------------------------------------------------------------")
+            print("---------------------------------------------------------------------------------")
             stampOut = outputStamp.stdout.read()
             stampOutJson = json.loads(stampOut)
             bulletin_id = stampOutJson['bulletin_id']
@@ -135,5 +154,11 @@ while True:
 
     except Exception as e:
         print(repr(e))
+        counter += 1
+        print(counter)
+        if counter > 4:
+            mge_error = 'ACE has a problem! The last error of 5 is:\n'+ repr(e)
+            print(send_tl_message(mge_error))
+            counter = 0
         print('Esperando 60 segundos para reintentar')
         time.sleep(60)
