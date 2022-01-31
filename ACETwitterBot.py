@@ -155,7 +155,6 @@ while True:
     except Exception as e:
         print(repr(e))
         counter += 1
-        print(counter)
         if counter > 4:
             mge_error = 'ACE has a problem! The last error of 5 is:\n'+ repr(e)
             print(send_tl_message(mge_error))
