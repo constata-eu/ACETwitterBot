@@ -133,7 +133,7 @@ while True:
                 api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, SPACES_FOLDER, tweetId), in_reply_to_status_id=tweetId)
                 print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(SPACES_FOLDER, tweetId))
 
-    except IndexError:
-        print('No hay un último tweet en el rango definido')
+    except Exception as e:
+        print(repr(e))
         print('Esperando 60 segundos para reintentar')
         time.sleep(60)
