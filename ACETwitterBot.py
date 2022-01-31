@@ -56,7 +56,7 @@ def htmlGenerateQuote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, id
 
 db = TinyDB('db.json')
 stampDocuments = Query()
-
+counter = 0
 
 while True:
     try:
