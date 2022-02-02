@@ -12,3 +12,6 @@ __pycache__
 
 #Ignora la base de datos
 db.json
+
+#Ignora entorno virtual
+/twBot

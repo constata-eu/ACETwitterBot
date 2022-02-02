@@ -72,13 +72,13 @@ while True:
         lastTweetID = lastTweetFile.read()
         lastTweetFile = open('lastTweetNumber','r')
         lastTweetStamp = lastTweetFile.read()
-        hashtags = tweepy.Cursor(api.search_tweets, q=TEXT_TO_SEARCH, since_id=lastTweetID)
+        hashtags = tweepy.Cursor(api.search_tweets, q=TEXT_TO_SEARCH, since_id=lastTweetID, tweet_mode="extended")
 
 
         for tweets in reversed(list(hashtags.items())):
-            if tweets.text.startswith('RT'):
+            if tweets.full_text.startswith('RT'):
                 continue
-            if tweets.text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
+            if tweets.full_text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
             os.mkdir('{}'.format(tweets.id))
             print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
@@ -89,13 +89,13 @@ while True:
             if tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id)
-                htmlGenerateReply(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.text,replyID.user.profile_image_url_https)
+                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.text,replyID.user.profile_image_url_https)
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
-                htmlGenerateQuote(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.text,tweets.quoted_status.user.profile_image_url_https)
+                htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.text,tweets.quoted_status.user.profile_image_url_https)
             else:
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
-                htmlGenerate(tweets.user.name,tweets.text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id)
+                htmlGenerate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id)
             zipPath = '{}.zip'.format(tweets.id)
             archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
             shutil.rmtree(str(tweets.id))
