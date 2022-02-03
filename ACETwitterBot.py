@@ -38,11 +38,11 @@ def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImegeRepla):
+def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla):
     template = open('templateReply.html','r')
     tweetHtml = template.read()
     template.close()
-    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyUserRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImegeRepla)
+    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyUserRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImageRepla).replace('tweetId', str(idRepla))
     outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
@@ -102,7 +102,7 @@ while True:
 
             outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
             outputStamp.wait()
-            print("---------------------------------------------------------------------------------")
+            print("--------------------------------------------------------------------------------")
             stampOut = outputStamp.stdout.read()
             stampOutJson = json.loads(stampOut)
             bulletin_id = stampOutJson['bulletin_id']
