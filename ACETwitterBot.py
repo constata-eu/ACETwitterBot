@@ -17,7 +17,7 @@ def send_tl_message(mge_error):
         'Content-Type': 'application/json',
     }
     chat_id = CHAT_ID
-    text = "ACE Twitter bot ALERT!\n" + mge_error
+    text = "ACE Twitter bot ALERT!" + " (" + ENVIRONMENT + ")" + "\n" + mge_error
     data = '{"chat_id": "' + chat_id + '", "text": "' + text + '", "disable_notification": false"'+ '"}'
 
     try:
@@ -148,19 +148,19 @@ while True:
                 outputFetchProof.wait()
                 db.update({'state': 'FetchProofed'}, stampDocuments.document_id == '{}'.format(docId))
                 print("html almacenado y cambiado state del documento a FetchProofed")
-                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata/{}/{}.html".format(SPACES_FOLDER, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
+                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata/{}/{}.html".format(ENVIRONMENT, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
                 uploadHtml.wait()
                 print("html enviado a Digital Ocean Spaces")
                 os.remove('{}.html'.format(tweetId))
                 print("html eliminado de storage local")
-                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, SPACES_FOLDER, tweetId), in_reply_to_status_id=tweetId)
-                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(SPACES_FOLDER, tweetId))
+                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, ENVIRONMENT, tweetId), in_reply_to_status_id=tweetId)
+                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(ENVIRONMENT, tweetId))
 
     except Exception as e:
         print(repr(e))
         counter += 1
         if counter > 4:
-            mge_error = 'ACE has a problem! The last error of 5 is:\n'+ repr(e)
+            mge_error = 'The last error of 5 is:\n'+ repr(e)
             print(send_tl_message(mge_error))
             counter = 0
         print('Esperando 60 segundos para reintentar')
