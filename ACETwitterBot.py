@@ -38,11 +38,11 @@ def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla):
+def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla, replyNameRepla):
     template = open('templateReply.html','r')
     tweetHtml = template.read()
     template.close()
-    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyUserRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImageRepla).replace('tweetId', str(idRepla))
+    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyNameRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImageRepla).replace('tweetId', str(idRepla))
     outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
@@ -89,7 +89,7 @@ while True:
             if tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
-                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https)
+                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name)
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
                 htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https)
