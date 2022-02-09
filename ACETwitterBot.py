@@ -34,7 +34,7 @@ def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla
     tweetHtml = template.read()
     template.close()
     dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('tweetId', str(idRepla)).replace('media_url_https_code_or_nothing', urlImageRepla)
-    outFile = open('tests/{}/{}.html'.format(idRepla,idRepla),'w')
+    outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
 
