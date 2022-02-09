@@ -18,3 +18,6 @@ db.json
 
 #Ignora archivo con ID del último tweet
 lastTweetNumber
+
+#Ignora test directory
+/tests

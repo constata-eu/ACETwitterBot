@@ -29,12 +29,12 @@ def send_tl_message(mge_error):
         return 'Error interno al enviar el mensaje a Telegram'
 
 
-def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla):
+def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, urlImageRepla):
     template = open('template.html','r')
     tweetHtml = template.read()
     template.close()
-    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('tweetId', str(idRepla))
-    outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
+    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('tweetId', str(idRepla)).replace('media_url_https_code_or_nothing', urlImageRepla)
+    outFile = open('tests/{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
 
@@ -95,7 +95,12 @@ while True:
                 htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https)
             else:
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
-                htmlGenerate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id)
+                if 'media' in tweets.entities:
+                    image_url = tweets.entities["media"][0]["media_url_https"]
+                    tweet_image = '<div class="Media"> <img style= "border-radius: 5px;width: 100%; margin: 2px;" src="' + image_url + '" alt="media url failed :("> </div>'
+                else:
+                    tweet_image = ""
+                htmlGenerate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id, tweet_image)
             zipPath = '{}.zip'.format(tweets.id)
             archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
             shutil.rmtree(str(tweets.id))
