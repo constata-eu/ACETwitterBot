@@ -38,11 +38,11 @@ def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla, replyNameRepla):
+def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla, replyNameRepla, urlImageRepla):
     template = open('templateReply.html','r')
     tweetHtml = template.read()
     template.close()
-    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyNameRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImageRepla).replace('tweetId', str(idRepla))
+    dataReplace = tweetHtml.replace('tweetUser', userRepla).replace('tweetText', textRepla).replace('tweetDate', str(dateRepla)).replace('tweetName', nameRepla).replace('tweetImage', imageRepla).replace('twNameReply', replyUserRepla).replace('twUserReply', replyNameRepla).replace('twTextReply', replyTextRepla).replace('twImageReply', replyImageRepla).replace('tweetId', str(idRepla)).replace('image_url_reply',urlImageRepla)
     outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
@@ -89,7 +89,12 @@ while True:
             if tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
-                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name)
+                if 'media' in replyID.entities:
+                    image_url_reply = replyID.entities["media"][0]["media_url_https"]
+                    tweet_image_reply = '<div class="Media" style= "border-left:2px solid #dddddd;margin-left:23px;"> <img style= "border-radius: 10px;width: 90%; margin: 2px; margin-left:36px;" src="' + image_url_reply + '" alt="media url failed :("> </div>'
+                else:
+                    tweet_image_reply = ""
+                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name,tweet_image_reply)
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
                 htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https)
