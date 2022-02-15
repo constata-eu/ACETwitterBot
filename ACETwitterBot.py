@@ -121,7 +121,7 @@ while True:
             stampOut = outputStamp.stdout.read()
             stampOutJson = json.loads(stampOut)
             bulletin_id = stampOutJson['bulletin_id']
-            state = stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']
+            state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
             document_id = stampOutJson['parts'][0]['document_id']
 
             db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
@@ -155,7 +155,7 @@ while True:
             showOut = outputShow.stdout.read()
             showJson = json.loads(showOut)
             bullId = showJson['bulletin_id']
-            itemState = showJson['bulletins']['{}'.format(bullId)]['state']
+            itemState = (showJson['bulletins']['{}'.format(bullId)]['state']).lower()
             if itemState == 'published':
                 print("Ya está publicado :) ", docId)
                 outputHtml = open("{}.html".format(tweetId), "w")
