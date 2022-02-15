@@ -142,7 +142,7 @@ while True:
         print('Esperando 60 segundos')
         time.sleep(60)#Serán 60'
 
-        searchDraft = db.search(stampDocuments.state == 'Draft')
+        searchDraft = db.search(stampDocuments.state == 'draft')
         for item in searchDraft:
             docId = item['document_id']
             tweetId = item['tw_id']
@@ -156,7 +156,7 @@ while True:
             showJson = json.loads(showOut)
             bullId = showJson['bulletin_id']
             itemState = showJson['bulletins']['{}'.format(bullId)]['state']
-            if itemState == 'Published':
+            if itemState == 'published':
                 print("Ya está publicado :) ", docId)
                 outputHtml = open("{}.html".format(tweetId), "w")
                 outputFetchProof = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "fetch-proof", "{}".format(docId)], stdout=outputHtml, universal_newlines=True)
