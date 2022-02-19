@@ -129,7 +129,7 @@ while True:
 
             os.remove('{}'.format(zipPath))
             #Da like al tweet
-            #tweets.favorite()
+            tweets.favorite()
 
         if lastTweetID != lastTweetStamp:
             lastTweet = lastTweetStamp
