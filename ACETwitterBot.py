@@ -87,7 +87,6 @@ while True:
             with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
                 json.dump(tweets._json, file, indent=2)
             if tweets.in_reply_to_status_id:
-                tweets.favorite()
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
                 if 'media' in replyID.entities:
@@ -97,7 +96,6 @@ while True:
                     tweet_image_reply = ""
                 htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name,tweet_image_reply)
             elif tweets.is_quote_status:
-                tweets.favorite()
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
                 if 'media' in tweets.quoted_status.entities:
                     image_url = tweets.quoted_status.entities["media"][0]["media_url_https"]
@@ -106,7 +104,6 @@ while True:
                     tweet_image_quote = ""
                 htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https, tweet_image_quote)
             else:
-                tweets.favorite()
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
                 if 'media' in tweets.entities:
                     image_url = tweets.entities["media"][0]["media_url_https"]
@@ -131,7 +128,8 @@ while True:
             lastTweetStamp = tweets.id
 
             os.remove('{}'.format(zipPath))
-
+            #Da like al tweet
+            #tweets.favorite()
 
         if lastTweetID != lastTweetStamp:
             lastTweet = lastTweetStamp
