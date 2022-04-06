@@ -89,6 +89,15 @@ while True:
             if tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
+                #El siguiente if filtra, mediante menciones, aquellos replies de tweets originales ya sellados
+                if tweets.entities["user_mentions"][0]["screen_name"]:
+                    mentions_total= len(tweets.entities["user_mentions"])
+                    for mentions in range(0,mentions_total):
+                        user_screen_name_mentions = tweets.entities["user_mentions"][mentions]["screen_name"]
+                        print(user_screen_name_mentions)
+                        if user_screen_name_mentions == "constataEu":
+                            print("Es reply de un tweet sellado que menciona a constataEu")
+                            continue
                 if 'media' in replyID.entities:
                     image_url_reply = replyID.entities["media"][0]["media_url_https"]
                     tweet_image_reply = '<div class="Media" style= "border-left:2px solid #dddddd;margin-left:23px;"> <img style= "border-radius: 10px;width: 90%; margin: 2px; margin-left:36px;" src="' + image_url_reply + '" alt="media url failed :("> </div>'
