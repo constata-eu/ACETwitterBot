@@ -94,7 +94,6 @@ while True:
                     mentions_total= len(tweets.entities["user_mentions"])
                     for mentions in range(0,mentions_total):
                         user_screen_name_mentions = tweets.entities["user_mentions"][mentions]["screen_name"]
-                        print(user_screen_name_mentions)
                         if user_screen_name_mentions == "constataEu":
                             print("Es reply de un tweet sellado que menciona a constataEu")
                             continue
