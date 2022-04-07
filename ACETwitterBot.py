@@ -29,7 +29,7 @@ def send_tl_message(mge_error):
         return 'Error interno al enviar el mensaje a Telegram'
 
 
-def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, urlImageRepla):
+def html_generate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, urlImageRepla):
     template = open('template.html','r')
     tweetHtml = template.read()
     template.close()
@@ -38,7 +38,7 @@ def htmlGenerate(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla, replyNameRepla, urlImageRepla):
+def html_generate_reply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, replyUserRepla, replyTextRepla, replyImageRepla, replyNameRepla, urlImageRepla):
     template = open('templateReply.html','r')
     tweetHtml = template.read()
     template.close()
@@ -47,7 +47,7 @@ def htmlGenerateReply(userRepla, textRepla, nameRepla, dateRepla, imageRepla, id
     outFile.write(dataReplace)
     outFile.close()
 
-def htmlGenerateQuote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, quoteNameRepla, quoteUserRepla, quoteTextRepla, quoteImageRepla, quoteUrlImgRepla):
+def html_generate_quote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, idRepla, quoteNameRepla, quoteUserRepla, quoteTextRepla, quoteImageRepla, quoteUrlImgRepla):
     template = open('templateQuote.html','r')
     tweetHtml = template.read()
     template.close()
@@ -55,6 +55,44 @@ def htmlGenerateQuote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, id
     outFile = open('{}/{}.html'.format(idRepla,idRepla),'w')
     outFile.write(dataReplace)
     outFile.close()
+
+def is_reply_to_constata(tweets):
+    mentions_total = len(tweets.entities["user_mentions"])
+    for mentions in range(0,mentions_total):
+        user_screen_name_mentions = tweets.entities["user_mentions"][mentions]["screen_name"]
+        if user_screen_name_mentions == "constataEu":
+            #Si menciona a constata
+            return False
+    else:
+        #Si no menciona a constata
+        return True
+
+def tweet_stamper(tweets):
+    print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
+    print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
+    #api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
+    with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
+        json.dump(tweets._json, file, indent=2)
+    zipPath = '{}.zip'.format(tweets.id)
+    archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
+    shutil.rmtree(str(tweets.id))
+
+    outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
+    outputStamp.wait()
+    print("--------------------------------------------------------------------------------")
+    stampOut = outputStamp.stdout.read()
+    stampOutJson = json.loads(stampOut)
+    bulletin_id = stampOutJson['bulletin_id']
+    state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
+    document_id = stampOutJson['parts'][0]['document_id']
+
+    db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
+    lastTweetStamp = tweets.id
+
+    os.remove('{}'.format(zipPath))
+    #Da like al tweet
+    tweets.favorite()
+
 
 db = TinyDB('db.json')
 stampDocuments = Query()
@@ -80,29 +118,23 @@ while True:
                 continue
             if tweets.full_text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
-            os.mkdir('{}'.format(tweets.id))
-            print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
-            print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
-            #api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
-            with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
-                json.dump(tweets._json, file, indent=2)
-            if tweets.in_reply_to_status_id:
+            #os.mkdir('{}'.format(tweets.id))
+            #print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
+            #print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
+            ##api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
+            #with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
+            #    json.dump(tweets._json, file, indent=2)
+            if tweets.in_reply_to_status_id and is_reply_to_constata(tweets):
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
-                #El siguiente if filtra, mediante menciones, aquellos replies de tweets originales ya sellados
-                if tweets.entities["user_mentions"][0]["screen_name"]:
-                    mentions_total= len(tweets.entities["user_mentions"])
-                    for mentions in range(0,mentions_total):
-                        user_screen_name_mentions = tweets.entities["user_mentions"][mentions]["screen_name"]
-                        if user_screen_name_mentions == "constataEu":
-                            print("Es reply de un tweet sellado que menciona a constataEu")
-                            continue
                 if 'media' in replyID.entities:
                     image_url_reply = replyID.entities["media"][0]["media_url_https"]
                     tweet_image_reply = '<div class="Media" style= "border-left:2px solid #dddddd;margin-left:23px;"> <img style= "border-radius: 10px;width: 90%; margin: 2px; margin-left:36px;" src="' + image_url_reply + '" alt="media url failed :("> </div>'
                 else:
                     tweet_image_reply = ""
-                htmlGenerateReply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name,tweet_image_reply)
+                os.mkdir('{}'.format(tweets.id))
+                html_generate_reply(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.in_reply_to_screen_name,replyID.full_text,replyID.user.profile_image_url_https,replyID.user.name,tweet_image_reply)
+                tweet_stamper(tweets)
             elif tweets.is_quote_status:
                 print('El tweet' ,tweets.id, 'es quote',tweets.is_quote_status)
                 if 'media' in tweets.quoted_status.entities:
@@ -110,7 +142,9 @@ while True:
                     tweet_image_quote = '<div class="Media"> <img style= "border-radius:10px; width:100%; margin:2px;" src="' + image_url + '" alt="media url failed :("> </div>'
                 else:
                     tweet_image_quote = ""
-                htmlGenerateQuote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https, tweet_image_quote)
+                os.mkdir('{}'.format(tweets.id))
+                html_generate_quote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https, tweet_image_quote)
+                tweet_stamper(tweets)
             else:
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
                 if 'media' in tweets.entities:
@@ -118,26 +152,28 @@ while True:
                     tweet_image = '<div class="Media"> <img style= "border-radius: 10px;width: 100%; margin: 2px;" src="' + image_url + '" alt="media url failed :("> </div>'
                 else:
                     tweet_image = ""
-                htmlGenerate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id, tweet_image)
-            zipPath = '{}.zip'.format(tweets.id)
-            archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
-            shutil.rmtree(str(tweets.id))
+                os.mkdir('{}'.format(tweets.id))
+                html_generate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id, tweet_image)
+                tweet_stamper(tweets)
+            #zipPath = '{}.zip'.format(tweets.id)
+            #archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
+            #shutil.rmtree(str(tweets.id))
 
-            outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
-            outputStamp.wait()
-            print("--------------------------------------------------------------------------------")
-            stampOut = outputStamp.stdout.read()
-            stampOutJson = json.loads(stampOut)
-            bulletin_id = stampOutJson['bulletin_id']
-            state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
-            document_id = stampOutJson['parts'][0]['document_id']
+            #outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
+            #outputStamp.wait()
+            #print("--------------------------------------------------------------------------------")
+            #stampOut = outputStamp.stdout.read()
+            #stampOutJson = json.loads(stampOut)
+            #bulletin_id = stampOutJson['bulletin_id']
+            #state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
+            #document_id = stampOutJson['parts'][0]['document_id']
 
-            db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
-            lastTweetStamp = tweets.id
+            #db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
+            #lastTweetStamp = tweets.id
 
-            os.remove('{}'.format(zipPath))
-            #Da like al tweet
-            tweets.favorite()
+            #os.remove('{}'.format(zipPath))
+            ##Da like al tweet
+            #tweets.favorite()
 
         if lastTweetID != lastTweetStamp:
             lastTweet = lastTweetStamp
