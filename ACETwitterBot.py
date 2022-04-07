@@ -93,6 +93,13 @@ def tweet_stamper(tweets):
     #Da like al tweet
     tweets.favorite()
 
+    if lastTweetID != lastTweetStamp:
+        lastTweet = lastTweetStamp
+        lastTweetFile = open('lastTweetNumber','w')
+        lastTweetFile.write(str(lastTweet))
+
+    lastTweetFile.close()
+
 
 db = TinyDB('db.json')
 stampDocuments = Query()
@@ -145,7 +152,7 @@ while True:
                 os.mkdir('{}'.format(tweets.id))
                 html_generate_quote(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url_https,tweets.id,tweets.quoted_status.user.screen_name,tweets.quoted_status.user.name,tweets.quoted_status.full_text,tweets.quoted_status.user.profile_image_url_https, tweet_image_quote)
                 tweet_stamper(tweets)
-            else:
+            elif not tweets.is_quote_status and not tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es tweet',tweets.in_reply_to_status_id)
                 if 'media' in tweets.entities:
                     image_url = tweets.entities["media"][0]["media_url_https"]
@@ -175,12 +182,7 @@ while True:
             ##Da like al tweet
             #tweets.favorite()
 
-        if lastTweetID != lastTweetStamp:
-            lastTweet = lastTweetStamp
-            lastTweetFile = open('lastTweetNumber','w')
-            lastTweetFile.write(str(lastTweet))
 
-        lastTweetFile.close()
 
         print("Último tweet: ",lastTweetID)
         print('Esperando 60 segundos')
