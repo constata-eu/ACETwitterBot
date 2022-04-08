@@ -10,6 +10,7 @@ import requests
 from tinydb import TinyDB, Query
 from access import *
 
+
 def send_tl_message(mge_error):
     bot_token = TL_TOKEN
     URL = "https://api.telegram.org/bot" + bot_token + "/sendMessage"
@@ -23,7 +24,6 @@ def send_tl_message(mge_error):
     try:
         requests.post(URL, headers=headers, data=data)
         return 'Mensaje enviado a Telegram'
-
     except Exception as e:
         print( 'La Exception >> ' + type(e).__name__ )
         return 'Error interno al enviar el mensaje a Telegram'
@@ -73,64 +73,55 @@ def tweet_stamper(tweets):
     #api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
     with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
         json.dump(tweets._json, file, indent=2)
-    zipPath = '{}.zip'.format(tweets.id)
+    zip_path = '{}.zip'.format(tweets.id)
     archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
     shutil.rmtree(str(tweets.id))
 
-    outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
-    outputStamp.wait()
+    output_stamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zip_path)], stdout=subprocess.PIPE, universal_newlines=True)
+    output_stamp.wait()
     print("--------------------------------------------------------------------------------")
-    stampOut = outputStamp.stdout.read()
-    stampOutJson = json.loads(stampOut)
-    bulletin_id = stampOutJson['bulletin_id']
-    state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
-    document_id = stampOutJson['parts'][0]['document_id']
+    stamp_out = output_stamp.stdout.read()
+    stamp_out_json = json.loads(stamp_out)
+    bulletin_id = stamp_out_json['bulletin_id']
+    state = (stamp_out_json['bulletins']['{}'.format(bulletin_id)]['state']).lower()
+    document_id = stamp_out_json['parts'][0]['document_id']
 
     db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
-    lastTweetStamp = tweets.id
+    last_tweet_stamp = tweets.id
 
-    os.remove('{}'.format(zipPath))
+    os.remove('{}'.format(zip_path))
     #Da like al tweet
     tweets.favorite()
 
-    if lastTweetID != lastTweetStamp:
-        lastTweet = lastTweetStamp
-        lastTweetFile = open('lastTweetNumber','w')
-        lastTweetFile.write(str(lastTweet))
+    if last_tweet_ID != last_tweet_stamp:
+        last_tweet = last_tweet_stamp
+        last_tweet_file = open('lastTweetNumber','w')
+        last_tweet_file.write(str(last_tweet))
 
-    lastTweetFile.close()
+    last_tweet_file.close()
 
 
 db = TinyDB('db.json')
-stampDocuments = Query()
+stamp_documents = Query()
 counter = 0
 
 while True:
     try:
-
         auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
         auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
         api = tweepy.API(auth)
 
-
-        lastTweetFile = open('lastTweetNumber','r')
-        lastTweetID = lastTweetFile.read()
-        lastTweetFile = open('lastTweetNumber','r')
-        lastTweetStamp = lastTweetFile.read()
-        hashtags = tweepy.Cursor(api.search_tweets, q=TEXT_TO_SEARCH, since_id=lastTweetID, tweet_mode="extended")
-
+        last_tweet_file = open('lastTweetNumber','r')
+        last_tweet_ID = last_tweet_file.read()
+        last_tweet_file = open('lastTweetNumber','r')
+        last_tweet_stamp = last_tweet_file.read()
+        hashtags = tweepy.Cursor(api.search_tweets, q=TEXT_TO_SEARCH, since_id=last_tweet_ID, tweet_mode="extended")
 
         for tweets in reversed(list(hashtags.items())):
             if tweets.full_text.startswith('RT'):
                 continue
             if tweets.full_text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
-            #os.mkdir('{}'.format(tweets.id))
-            #print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
-            #print('Cuando se publique el boletín, responderé directamente al tweet de  @{} con el certificado.'.format(tweets.user.screen_name), tweets.id)
-            ##api.update_status('@{} Estoy trabajando para sellar el tweet. En breve, responderé este tweet con el certificado.'.format(tweets.user.screen_name), in_reply_to_status_id=tweets.id)
-            #with open('{}/{}.json'.format(tweets.id,tweets.id), 'w') as file:
-            #    json.dump(tweets._json, file, indent=2)
             if tweets.in_reply_to_status_id and is_reply_to_constata(tweets):
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
@@ -162,60 +153,40 @@ while True:
                 os.mkdir('{}'.format(tweets.id))
                 html_generate(tweets.user.name,tweets.full_text,tweets.user.screen_name,tweets.created_at,tweets.user.profile_image_url,tweets.id, tweet_image)
                 tweet_stamper(tweets)
-            #zipPath = '{}.zip'.format(tweets.id)
-            #archivo_zip = shutil.make_archive(str(tweets.id), "zip", str(tweets.id))
-            #shutil.rmtree(str(tweets.id))
-
-            #outputStamp = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "stamp", "{}".format(zipPath)], stdout=subprocess.PIPE, universal_newlines=True)
-            #outputStamp.wait()
-            #print("--------------------------------------------------------------------------------")
-            #stampOut = outputStamp.stdout.read()
-            #stampOutJson = json.loads(stampOut)
-            #bulletin_id = stampOutJson['bulletin_id']
-            #state = (stampOutJson['bulletins']['{}'.format(bulletin_id)]['state']).lower()
-            #document_id = stampOutJson['parts'][0]['document_id']
-
-            #db.insert({'bulletin_id': bulletin_id, 'document_id': document_id, 'tw_id': tweets.id, 'state': state, 'userToReply': tweets.user.screen_name})
-            #lastTweetStamp = tweets.id
-
-            #os.remove('{}'.format(zipPath))
-            ##Da like al tweet
-            #tweets.favorite()
 
 
-
-        print("Último tweet: ",lastTweetID)
+        print("Último tweet: ",last_tweet_ID)
         print('Esperando 60 segundos')
         time.sleep(60)#Serán 60'
 
-        searchDraft = db.search(stampDocuments.state == 'draft')
-        for item in searchDraft:
-            docId = item['document_id']
-            tweetId = item['tw_id']
-            user2Reply = item['userToReply']
+        search_draft = db.search(stamp_documents.state == 'draft')
+        for item in search_draft:
+            doc_ID = item['document_id']
+            tweet_id = item['tw_id']
+            user_to_reply = item['userToReply']
 
-            print("En draft (esperando publicación en Blockchain)",docId)
+            print("En draft (esperando publicación en Blockchain)",doc_ID)
 
-            outputShow = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "show", "{}".format(docId)], stdout=subprocess.PIPE, universal_newlines=True)
-            outputShow.wait()
-            showOut = outputShow.stdout.read()
-            showJson = json.loads(showOut)
-            bullId = showJson['bulletin_id']
-            itemState = (showJson['bulletins']['{}'.format(bullId)]['state']).lower()
-            if itemState == 'published':
-                print("Ya está publicado :) ", docId)
-                outputHtml = open("{}.html".format(tweetId), "w")
-                outputFetchProof = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "fetch-proof", "{}".format(docId)], stdout=outputHtml, universal_newlines=True)
-                outputFetchProof.wait()
-                db.update({'state': 'FetchProofed'}, stampDocuments.document_id == '{}'.format(docId))
+            output_show = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "show", "{}".format(doc_ID)], stdout=subprocess.PIPE, universal_newlines=True)
+            output_show.wait()
+            show_out = output_show.stdout.read()
+            show_json = json.loads(show_out)
+            bull_id = show_json['bulletin_id']
+            item_state = (show_json['bulletins']['{}'.format(bull_id)]['state']).lower()
+            if item_state == 'published':
+                print("Ya está publicado :) ", doc_ID)
+                output_html = open("{}.html".format(tweet_id), "w")
+                output_fetch_proof = subprocess.Popen(["./constata-cli-linux", "--password", "{}".format(CONSTATA_PASS), "fetch-proof", "{}".format(doc_ID)], stdout=output_html, universal_newlines=True)
+                output_fetch_proof.wait()
+                db.update({'state': 'FetchProofed'}, stamp_documents.document_id == '{}'.format(doc_ID))
                 print("html almacenado y cambiado state del documento a FetchProofed")
-                uploadHtml = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweetId), "s3://aceconstata/{}/{}.html".format(ENVIRONMENT, tweetId)], stdout=subprocess.PIPE, universal_newlines=True)
-                uploadHtml.wait()
+                upload_html = subprocess.Popen(["s3cmd", "--add-header=content-disposition:attachment", "put", "-P", "{}.html".format(tweet_id), "s3://aceconstata/{}/{}.html".format(ENVIRONMENT, tweet_id)], stdout=subprocess.PIPE, universal_newlines=True)
+                upload_html.wait()
                 print("html enviado a Digital Ocean Spaces")
-                os.remove('{}.html'.format(tweetId))
+                os.remove('{}.html'.format(tweet_id))
                 print("html eliminado de storage local")
-                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user2Reply, ENVIRONMENT, tweetId), in_reply_to_status_id=tweetId)
-                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(ENVIRONMENT, tweetId))
+                api.update_status('@{} 📥 ¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html'.format(user_to_reply, ENVIRONMENT, tweet_id), in_reply_to_status_id=tweet_id)
+                print("¡Tu tweet fue sellado! Descarga el certificado-> https://aceconstata.ams3.digitaloceanspaces.com/{}/{}.html".format(ENVIRONMENT, tweet_id))
 
     except Exception as e:
         print(repr(e))
