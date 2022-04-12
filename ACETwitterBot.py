@@ -122,7 +122,7 @@ while True:
                 continue
             if tweets.full_text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
-            if tweets.in_reply_to_status_id and is_reply_to_constata(tweets):
+            if tweets.in_reply_to_status_id and is_reply_to_constata(api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")):
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
                 if 'media' in replyID.entities:
