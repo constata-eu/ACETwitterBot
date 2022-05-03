@@ -56,16 +56,6 @@ def html_generate_quote(userRepla, textRepla, nameRepla, dateRepla, imageRepla, 
     outFile.write(dataReplace)
     outFile.close()
 
-def is_reply_to_constata(tweets):
-    mentions_total = len(tweets.entities["user_mentions"])
-    for mentions in range(0,mentions_total):
-        user_screen_name_mentions = tweets.entities["user_mentions"][mentions]["screen_name"]
-        if user_screen_name_mentions == "constataEu":
-            #Si menciona a constata
-            return False
-    else:
-        #Si no menciona a constata
-        return True
 
 def tweet_stamper(tweets):
     print(time.strftime("%c"),"| Se enviará a sellar el tweet", tweets.id, tweets.created_at)
@@ -122,7 +112,7 @@ while True:
                 continue
             if tweets.full_text.startswith('@constataEu 📥 ¡Tu tweet fue sellado!'):
                 continue
-            if tweets.in_reply_to_status_id and is_reply_to_constata(api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")):
+            if tweets.in_reply_to_status_id:
                 print('El tweet' ,tweets.id, 'es reply',tweets.in_reply_to_status_id)
                 replyID = api.get_status(id=tweets.in_reply_to_status_id, tweet_mode="extended")
                 if 'media' in replyID.entities:
