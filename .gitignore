@@ -15,6 +15,7 @@ db.json
 
 #Ignora entorno virtual
 /twBot
+/TwitterBot
 
 #Ignora archivo con ID del último tweet
 lastTweetNumber
